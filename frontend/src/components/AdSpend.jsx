@@ -14,7 +14,7 @@ function Card({ title, children, style = {} }) {
   )
 }
 
-export default function AdSpend({ data }) {
+export default function AdSpend({ data, isReadOnly = false }) {
   const [spend, setSpend] = useState(DEFAULT_SPEND)
   const sourceTotals = data?.sourceTotals || {}
   const stages = data?.stages || []
@@ -37,7 +37,10 @@ export default function AdSpend({ data }) {
 
   return (
     <div>
-      <div style={{ marginBottom: '4px', fontSize: '16px', fontWeight: 300, letterSpacing: '-0.01em', color: 'var(--text)' }}>Ad Spend Tracker</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+        <div style={{ fontSize: '16px', fontWeight: 300, letterSpacing: '-0.01em', color: 'var(--text)' }}>Ad Spend Tracker</div>
+        {isReadOnly && <div style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(212,175,55,0.1)', color: '#d4af37', letterSpacing: '0.08em', textTransform: 'uppercase' }}>View Only</div>}
+      </div>
       <div style={{ fontSize: '12px', color: 'var(--text-2)', marginBottom: '18px', letterSpacing: '0.03em' }}>Enter daily spend per source to calculate cost-per-lead metrics</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '8px', marginBottom: '14px' }}>
@@ -68,7 +71,8 @@ export default function AdSpend({ data }) {
               <div style={{ flex: 1, position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: 'var(--text-3)' }}>$</span>
                 <input type="number" min="0" step="1" value={spend[src]}
-                  onChange={e => setSpend(prev => ({ ...prev, [src]: e.target.value }))}
+                  onChange={e => !isReadOnly && setSpend(prev => ({ ...prev, [src]: e.target.value }))}
+                  readOnly={isReadOnly}
                   style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(212,175,55,0.1)', borderRadius: '5px', padding: '6px 10px 6px 20px', fontSize: '11px', color: 'var(--text)', fontFamily: 'var(--font-body)', outline: 'none', fontWeight: 300 }} />
               </div>
               <div style={{ textAlign: 'center', minWidth: '56px' }}>

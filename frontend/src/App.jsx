@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Shield } from 'lucide-react'
+import { useAuth } from './hooks/useAuth'
+import AccessGate from './components/AccessGate'
 import { useStats } from './hooks/useStats'
 import MetricCard from './components/MetricCard'
 import FunnelChart from './components/FunnelChart'
@@ -156,6 +158,10 @@ export default function App() {
   const [source, setSource] = useState('all')
   const [range, setRange] = useState('daily')
   const { data, loading, error, refetch, lastFetch } = useStats(source, range)
+  const { role, allowed } = useAuth()
+
+  if (!allowed) return <AccessGate />
+
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
   return (
@@ -170,6 +176,7 @@ export default function App() {
             <div style={{ fontSize: '9px', color: 'var(--text-3)', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>Reporting Dashboard</div>
           </div>
           <div style={{ fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)', padding: '3px 9px', borderRadius: '3px', fontWeight: 500 }}>Live</div>
+          {role === 'admin' && <div style={{ fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0a0a0a', background: '#d4af37', padding: '3px 9px', borderRadius: '3px', fontWeight: 600 }}>Admin</div>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-3)', letterSpacing: '0.03em', fontWeight: 300 }}>{today}</span>
@@ -180,7 +187,7 @@ export default function App() {
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1.5px solid rgba(212,175,55,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 600, color: '#d4af37', letterSpacing: '0.04em' }}>AO</div>
-            <span style={{ fontSize: '11px', color: 'var(--text-3)', letterSpacing: '0.04em', fontWeight: 300 }}>Admin</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-2)', letterSpacing: '0.04em', fontWeight: 400 }}>{role === 'admin' ? 'Admin' : 'Viewer'}</span>
           </div>
         </div>
       </div>
@@ -212,7 +219,7 @@ export default function App() {
       <div style={{ flex: 1, padding: '22px 28px', maxWidth: '1400px', width: '100%', margin: '0 auto' }}>
         {activeTab === 'overview' && <Overview source={source} setSource={setSource} range={range} data={data} error={error} />}
         {activeTab === 'pipeline' && <Pipeline range={range} />}
-        {activeTab === 'adspend'  && <AdSpend data={data} />}
+        {activeTab === 'adspend'  && <AdSpend data={data} isReadOnly={role !== 'admin'} />}
         {activeTab === 'trends'   && <Trends range={range} />}
         {activeTab === 'dropoff'  && <Dropoff data={data} />}
         {activeTab === 'team'     && <Team />}
