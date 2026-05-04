@@ -1,0 +1,10 @@
+{
+  "name": "ghl-dashboard",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "cd frontend && npm install",
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build"
+  }
+}
