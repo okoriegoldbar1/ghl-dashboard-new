@@ -8,7 +8,7 @@ const DEFAULT_SPEND = { 'Meta Ads': 150, 'Indeed': 80, 'OnlineJobs.ph': 40 }
 function Card({ title, children, style = {} }) {
   return (
     <div style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '18px', ...style }}>
-      <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>{title}</div>
+      <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>{title}</div>
       {children}
     </div>
   )
@@ -38,7 +38,7 @@ export default function AdSpend({ data }) {
   return (
     <div>
       <div style={{ marginBottom: '4px', fontSize: '16px', fontWeight: 300, letterSpacing: '-0.01em', color: 'var(--text)' }}>Ad Spend Tracker</div>
-      <div style={{ fontSize: '11px', color: 'var(--text-3)', marginBottom: '18px', letterSpacing: '0.03em' }}>Enter daily spend per source to calculate cost-per-lead metrics</div>
+      <div style={{ fontSize: '12px', color: 'var(--text-2)', marginBottom: '18px', letterSpacing: '0.03em' }}>Enter daily spend per source to calculate cost-per-lead metrics</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '8px', marginBottom: '14px' }}>
         {[
@@ -49,9 +49,9 @@ export default function AdSpend({ data }) {
         ].map((k, i) => (
           <div key={k.label} style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '14px', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, left: 12, right: 12, height: '1px', background: ACCENT[i] }} />
-            <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>{k.label}</div>
+            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>{k.label}</div>
             <div style={{ fontSize: '22px', fontWeight: 300, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1 }}>{k.val}</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '5px' }}>{k.sub}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-2)', marginTop: '5px' }}>{k.sub}</div>
           </div>
         ))}
       </div>
@@ -92,7 +92,7 @@ export default function AdSpend({ data }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
           <thead>
             <tr>{['Source','Spend','Leads','Cost / Lead','Cost / Qualified','Cost / Live'].map(h => (
-              <th key={h} style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 10px', borderBottom: '1px solid rgba(212,175,55,0.08)', textAlign: h === 'Source' ? 'left' : 'center' }}>{h}</th>
+              <th key={h} style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 10px', borderBottom: '1px solid rgba(212,175,55,0.08)', textAlign: h === 'Source' ? 'left' : 'center' }}>{h}</th>
             ))}</tr>
           </thead>
           <tbody>

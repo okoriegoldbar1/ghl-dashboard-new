@@ -27,7 +27,7 @@ const TT = { background: '#0a0a0a', border: '1px solid rgba(212,175,55,0.15)', b
 function Card({ title, children }) {
   return (
     <div style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '18px' }}>
-      <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>{title}</div>
+      <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>{title}</div>
       {children}
     </div>
   )
@@ -38,7 +38,7 @@ export default function Trends({ range }) {
   return (
     <div>
       <div style={{ marginBottom: '4px', fontSize: '16px', fontWeight: 300, letterSpacing: '-0.01em', color: 'var(--text)' }}>Trends & History</div>
-      <div style={{ fontSize: '11px', color: 'var(--text-3)', marginBottom: '18px', letterSpacing: '0.03em' }}>Lead volume by source and stage — filtered by your selected period</div>
+      <div style={{ fontSize: '12px', color: 'var(--text-2)', marginBottom: '18px', letterSpacing: '0.03em' }}>Lead volume by source and stage — filtered by your selected period</div>
 
       <Card title="Lead Volume">
         <ResponsiveContainer width="100%" height={200}>

@@ -25,27 +25,27 @@ export default function DailySummary({ data, range = 'daily' }) {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   return (
-    <div style={{ border: '1px solid rgba(212,175,55,0.18)', borderRadius: '8px', padding: '20px 24px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '20px', alignItems: 'center' }}>
+    <div style={{ border: '1px solid rgba(212,175,55,0.2)', borderRadius: '8px', padding: '20px 24px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '20px', alignItems: 'center', background: '#0f0f0f' }}>
       <div>
-        <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '8px' }}>
+        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>
           {periodLabel} Summary — {today}
         </div>
-        <div style={{ fontSize: '13px', color: 'var(--text-2)', lineHeight: 1.7, fontWeight: 300 }}>
+        <div style={{ fontSize: '14px', color: 'var(--text-2)', lineHeight: 1.7, fontWeight: 400 }}>
           {totals[0] > 0
-            ? <><strong style={{ color: 'var(--text)', fontWeight: 500 }}>{totals[0]} leads</strong> created {range === 'daily' ? 'today' : range === 'weekly' ? 'this week' : 'in this period'}.{' '}
-                {topSource && <><strong style={{ color: '#d4af37', fontWeight: 500 }}>{topSource[0]}</strong> is the top source.</>}{' '}
-                <strong style={{ color: 'var(--text)', fontWeight: 500 }}>{totals[4]}</strong> reached Website Live.{' '}
-                {biggestDrop.pct > 0 && <>Drop-off highest at <strong style={{ color: 'var(--text)', fontWeight: 500 }}>{biggestDrop.label}</strong> ({biggestDrop.pct}%).</>}
+            ? <><strong style={{ color: '#fff', fontWeight: 600 }}>{totals[0]} leads</strong> created {range === 'daily' ? 'today' : range === 'weekly' ? 'this week' : 'in this period'}.{' '}
+                {topSource && <><strong style={{ color: '#d4af37', fontWeight: 600 }}>{topSource[0]}</strong> is the top source.</>}{' '}
+                <strong style={{ color: '#fff', fontWeight: 600 }}>{totals[4]}</strong> reached Website Live.{' '}
+                {biggestDrop.pct > 0 && <>Drop-off highest at <strong style={{ color: '#fff', fontWeight: 600 }}>{biggestDrop.label}</strong> ({biggestDrop.pct}%).</>}
               </>
-            : <span>No leads created {range === 'daily' ? 'today' : 'in this period'} yet.</span>
+            : <span style={{ color: 'var(--text-3)' }}>No leads created {range === 'daily' ? 'today' : 'in this period'} yet.</span>
           }
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '24px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: '28px', flexShrink: 0 }}>
         {[{ val: totals[0], label: 'Leads' }, { val: totals[4], label: 'Live' }, { val: overallConv + '%', label: 'Conv.' }].map(({ val, label }) => (
           <div key={label} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: 300, color: '#d4af37', letterSpacing: '-0.02em', lineHeight: 1 }}>{val}</div>
-            <div style={{ fontSize: '9px', color: 'var(--text-3)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 500 }}>{label}</div>
+            <div style={{ fontSize: '30px', fontWeight: 300, color: '#d4af37', letterSpacing: '-0.02em', lineHeight: 1 }}>{val}</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>{label}</div>
           </div>
         ))}
       </div>

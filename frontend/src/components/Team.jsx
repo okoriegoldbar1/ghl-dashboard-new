@@ -30,7 +30,7 @@ export default function Team() {
   return (
     <div>
       <div style={{ marginBottom: '4px', fontSize: '16px', fontWeight: 300, letterSpacing: '-0.01em', color: 'var(--text)' }}>Team Access</div>
-      <div style={{ fontSize: '11px', color: 'var(--text-3)', marginBottom: '18px', letterSpacing: '0.03em' }}>Manage who can view this dashboard and their permissions</div>
+      <div style={{ fontSize: '12px', color: 'var(--text-2)', marginBottom: '18px', letterSpacing: '0.03em' }}>Manage who can view this dashboard and their permissions</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '14px' }}>
         {[
@@ -40,9 +40,9 @@ export default function Team() {
         ].map(k => (
           <div key={k.label} style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '14px', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, left: 12, right: 12, height: '1px', background: k.accent }} />
-            <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>{k.label}</div>
+            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>{k.label}</div>
             <div style={{ fontSize: '24px', fontWeight: 300, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1 }}>{k.val}</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '5px' }}>{k.sub}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-2)', marginTop: '5px' }}>{k.sub}</div>
           </div>
         ))}
       </div>
@@ -102,7 +102,7 @@ export default function Team() {
       )}
 
       <div style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '18px' }}>
-        <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>Access Levels</div>
+        <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>Access Levels</div>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
           <thead>
             <tr>

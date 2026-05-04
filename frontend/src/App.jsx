@@ -44,14 +44,14 @@ function Card({ children, style = {} }) {
 }
 
 function CardTitle({ children }) {
-  return <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>{children}</div>
+  return <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>{children}</div>
 }
 
 function RangeLabel({ range }) {
   const labels = { daily: 'Today', weekly: 'This Week', biweekly: 'Last 14 Days', monthly: 'This Month', all: 'All Time' }
   return (
-    <div style={{ fontSize: '10px', color: 'var(--text-3)', marginBottom: '14px', padding: '7px 14px', borderLeft: '1.5px solid rgba(212,175,55,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-      Showing leads created: <strong style={{ color: '#d4af37', fontWeight: 500 }}>{labels[range] || 'All Time'}</strong>
+    <div style={{ fontSize: '11px', color: 'var(--text-2)', marginBottom: '14px', padding: '7px 14px', borderLeft: '2px solid #d4af37', background: 'rgba(212,175,55,0.05)', borderRadius: '0 4px 4px 0' }}>
+      Showing: <strong style={{ color: '#d4af37', fontWeight: 600 }}>{labels[range] || 'All Time'}</strong>
     </div>
   )
 }
@@ -192,7 +192,7 @@ export default function App() {
             border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font-body)',
             fontWeight: 500, transition: 'all .2s', borderBottom: '1.5px solid',
             borderBottomColor: activeTab === tab.id ? '#d4af37' : 'transparent',
-            color: activeTab === tab.id ? '#d4af37' : 'var(--text-3)',
+            color: activeTab === tab.id ? '#d4af37' : 'var(--text-2)',
           }}>{tab.label}</button>
         ))}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -203,7 +203,7 @@ export default function App() {
               fontWeight: 500, transition: 'all .15s',
               borderColor: range === r.id ? '#d4af37' : 'rgba(212,175,55,0.1)',
               background: range === r.id ? 'rgba(212,175,55,0.08)' : 'transparent',
-              color: range === r.id ? '#d4af37' : 'var(--text-3)',
+              color: range === r.id ? '#d4af37' : 'var(--text-2)',
             }}>{r.label}</button>
           ))}
         </div>

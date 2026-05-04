@@ -11,7 +11,7 @@ const SOURCE_DROP = [
 function Card({ title, children, style = {} }) {
   return (
     <div style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '18px', ...style }}>
-      <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>{title}</div>
+      <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>{title}</div>
       {children}
     </div>
   )
@@ -44,7 +44,7 @@ export default function Dropoff({ data }) {
   return (
     <div>
       <div style={{ marginBottom: '4px', fontSize: '16px', fontWeight: 300, letterSpacing: '-0.01em', color: 'var(--text)' }}>Drop-off Analysis</div>
-      <div style={{ fontSize: '11px', color: 'var(--text-3)', marginBottom: '18px', letterSpacing: '0.03em' }}>Where leads are leaving your pipeline</div>
+      <div style={{ fontSize: '12px', color: 'var(--text-2)', marginBottom: '18px', letterSpacing: '0.03em' }}>Where leads are leaving your pipeline</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '14px' }}>
         {[
@@ -54,9 +54,9 @@ export default function Dropoff({ data }) {
         ].map(k => (
           <div key={k.label} style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '14px', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, left: 12, right: 12, height: '1px', background: k.accent }} />
-            <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>{k.label}</div>
+            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>{k.label}</div>
             <div style={{ fontSize: k.label === 'Biggest Drop-off' ? '13px' : '24px', fontWeight: 300, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1.2 }}>{k.val}</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-3)', marginTop: '5px' }}>{k.sub}</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-2)', marginTop: '5px' }}>{k.sub}</div>
           </div>
         ))}
       </div>
