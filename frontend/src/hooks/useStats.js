@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
-export function useStats(source = 'all') {
+export function useStats(source = 'all', range = 'all') {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -10,7 +10,7 @@ export function useStats(source = 'all') {
 
   const fetch_ = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/stats?source=${source}`)
+      const res = await fetch(`${API_BASE}/stats?source=${encodeURIComponent(source)}&range=${range}`)
       if (!res.ok) throw new Error('Failed to fetch stats')
       const json = await res.json()
       setData(json)
@@ -21,12 +21,12 @@ export function useStats(source = 'all') {
     } finally {
       setLoading(false)
     }
-  }, [source])
+  }, [source, range])
 
   useEffect(() => {
     setLoading(true)
     fetch_()
-    const interval = setInterval(fetch_, 30000) // refresh every 30s
+    const interval = setInterval(fetch_, 30000)
     return () => clearInterval(interval)
   }, [fetch_])
 

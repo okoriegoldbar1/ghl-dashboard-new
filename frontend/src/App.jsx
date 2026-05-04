@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { RefreshCw, Zap } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { useStats } from './hooks/useStats'
 import MetricCard from './components/MetricCard'
 import FunnelChart from './components/FunnelChart'
@@ -18,38 +18,67 @@ const SOURCE_FILTERS = [
   { id: 'Indeed', label: 'Indeed' },
   { id: 'OnlineJobs.ph', label: 'OnlineJobs.ph' },
 ]
-
+const DATE_RANGES = [
+  { id: 'daily', label: 'Today' },
+  { id: 'weekly', label: 'This Week' },
+  { id: 'biweekly', label: '14 Days' },
+  { id: 'monthly', label: 'This Month' },
+  { id: 'all', label: 'All Time' },
+]
 const NAV_TABS = [
-  { id: 'overview',  label: 'Overview' },
-  { id: 'pipeline',  label: 'Pipeline' },
-  { id: 'adspend',   label: 'Ad Spend' },
-  { id: 'trends',    label: 'Trends' },
-  { id: 'dropoff',   label: 'Drop-off' },
-  { id: 'team',      label: 'Team' },
+  { id: 'overview', label: 'Overview' },
+  { id: 'pipeline', label: 'Pipeline' },
+  { id: 'adspend', label: 'Ad Spend' },
+  { id: 'trends', label: 'Trends' },
+  { id: 'dropoff', label: 'Drop-off' },
+  { id: 'team', label: 'Team' },
 ]
 
 function Card({ children, style = {} }) {
   return (
-    <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', ...style }}>
-      {children}
-    </div>
+    <div style={{ background: '#0a0a0a', border: '1px solid rgba(212,175,55,0.08)', borderRadius: '8px', padding: '18px', transition: 'border-color .2s', ...style }}
+      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(212,175,55,0.15)'}
+      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(212,175,55,0.08)'}
+    >{children}</div>
   )
 }
 
 function CardTitle({ children }) {
+  return <div style={{ fontSize: '9px', fontWeight: 500, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid rgba(212,175,55,0.07)' }}>{children}</div>
+}
+
+function RangeLabel({ range }) {
+  const labels = { daily: 'Today', weekly: 'This Week', biweekly: 'Last 14 Days', monthly: 'This Month', all: 'All Time' }
   return (
-    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '10px', color: 'var(--text-3)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-      {children}
+    <div style={{ fontSize: '10px', color: 'var(--text-3)', marginBottom: '14px', padding: '7px 14px', borderLeft: '1.5px solid rgba(212,175,55,0.3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+      Showing leads created: <strong style={{ color: '#d4af37', fontWeight: 500 }}>{labels[range] || 'All Time'}</strong>
     </div>
   )
 }
 
-function Overview({ source, setSource, data, loading, error }) {
+function SourceFilter({ source, setSource }) {
+  return (
+    <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
+      {SOURCE_FILTERS.map(f => (
+        <button key={f.id} onClick={() => setSource(f.id)} style={{
+          padding: '4px 12px', borderRadius: '3px', fontSize: '10px', fontWeight: 500,
+          border: '1px solid', cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all .15s',
+          textTransform: 'uppercase', letterSpacing: '0.07em',
+          borderColor: source === f.id ? 'rgba(212,175,55,0.45)' : 'rgba(212,175,55,0.08)',
+          background: source === f.id ? 'rgba(212,175,55,0.08)' : 'transparent',
+          color: source === f.id ? '#d4af37' : 'var(--text-3)',
+        }}>{f.label}</button>
+      ))}
+    </div>
+  )
+}
+
+function Overview({ source, setSource, range, data, error }) {
   const stages = data?.stages || []
   const stageCounts = data?.stageCounts || {}
   const totals = stages.map(s => stageCounts[s]?.total || 0)
   const overallConv = totals[0] > 0 ? Math.round((totals[4] / totals[0]) * 100) : 0
-  const ACCENT = ['#d4af37','#c9a227','#b8952a','#a07818','#8a6e1a']
+  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#856010']
   const SUBS = [
     'entry point',
     totals[0] > 0 ? `${Math.round(totals[1]/totals[0]*100)}% of screening` : '—',
@@ -61,77 +90,63 @@ function Overview({ source, setSource, data, loading, error }) {
 
   return (
     <div>
-      <DailySummary data={data} />
-      {error && (
-        <div style={{ background: 'rgba(214,48,49,0.1)', border: '1px solid rgba(214,48,49,0.3)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: '14px', color: '#ff7675', fontSize: '12px' }}>
-          Could not reach backend: {error}. Make sure the server is running on port 4000.
-        </div>
-      )}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
-        {SOURCE_FILTERS.map(f => (
-          <button key={f.id} onClick={() => setSource(f.id)} style={{ padding: '5px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, border: '1px solid', cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all .15s', borderColor: source === f.id ? 'rgba(212,175,55,0.45)' : 'var(--border)', background: source === f.id ? 'rgba(212,175,55,0.12)' : 'transparent', color: source === f.id ? '#d4af37' : 'var(--text-3)' }}>
-            {f.label}
-          </button>
-        ))}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '14px' }}>
+      <DailySummary data={data} range={range} />
+      {error && <div style={{ background: 'rgba(214,48,49,0.08)', border: '1px solid rgba(214,48,49,0.2)', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', color: '#ff7675', fontSize: '11px' }}>Could not reach backend: {error}</div>}
+      <RangeLabel range={range} />
+      <SourceFilter source={source} setSource={setSource} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '8px', marginBottom: '14px' }}>
         {LABELS.map((label, i) => <MetricCard key={label} label={label} value={totals[i]} sub={SUBS[i]} accent={ACCENT[i]} />)}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '12px', marginBottom: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '10px', marginBottom: '10px' }}>
         <Card><CardTitle>Pipeline Funnel</CardTitle><FunnelChart stageCounts={stageCounts} stages={stages} /></Card>
-        <Card><CardTitle>Leads by Source</CardTitle><SourceBreakdown sourceTotals={data?.sourceTotals} /></Card>
+        <Card><CardTitle>Source Breakdown</CardTitle><SourceBreakdown sourceTotals={data?.sourceTotals} /></Card>
       </div>
-      <Card><CardTitle>Recent Activity</CardTitle><RecentLeads leads={data?.recentLeads} /></Card>
+      <Card><CardTitle>Recent Activity — leads created {range === 'daily' ? 'today' : range === 'weekly' ? 'this week' : 'in selected period'}</CardTitle><RecentLeads leads={data?.recentLeads} /></Card>
     </div>
   )
 }
 
-function Pipeline({ data }) {
+function Pipeline({ range }) {
   const [source, setSource] = useState('all')
-  const { data: fd } = useStats(source)
-  const d = fd || data
-  const stages = d?.stages || []
-  const stageCounts = d?.stageCounts || {}
+  const { data } = useStats(source, range)
+  const stages = data?.stages || []
+  const stageCounts = data?.stageCounts || {}
   const totals = stages.map(s => stageCounts[s]?.total || 0)
-  const ACCENT = ['#d4af37','#c9a227','#b8952a','#a07818','#8a6e1a']
+  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#856010']
   const convs = [
     { label: 'Screening → Qualified', from: totals[0], to: totals[1] },
     { label: 'Qualified → Booked', from: totals[1], to: totals[2] },
     { label: 'Booked → Approved', from: totals[2], to: totals[3] },
     { label: 'Approved → Live', from: totals[3], to: totals[4] },
   ]
-
   return (
     <div>
-      <div style={{ marginBottom: '4px', fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Pipeline Breakdown</div>
-      <div style={{ fontSize: '12px', color: 'var(--text-3)', marginBottom: '14px' }}>Lead counts per stage by source</div>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-        {SOURCE_FILTERS.map(f => (
-          <button key={f.id} onClick={() => setSource(f.id)} style={{ padding: '5px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, border: '1px solid', cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all .15s', borderColor: source === f.id ? 'rgba(212,175,55,0.45)' : 'var(--border)', background: source === f.id ? 'rgba(212,175,55,0.12)' : 'transparent', color: source === f.id ? '#d4af37' : 'var(--text-3)' }}>{f.label}</button>
-        ))}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '14px' }}>
+      <div style={{ marginBottom: '4px', fontSize: '16px', fontWeight: 300, letterSpacing: '-0.01em', color: 'var(--text)' }}>Pipeline Breakdown</div>
+      <div style={{ fontSize: '11px', color: 'var(--text-3)', marginBottom: '16px', letterSpacing: '0.03em' }}>Only leads created in the selected period</div>
+      <RangeLabel range={range} />
+      <SourceFilter source={source} setSource={setSource} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '8px', marginBottom: '14px' }}>
         {stages.map((s, i) => <MetricCard key={s} label={s} value={totals[i]} accent={ACCENT[i]} />)}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
         <Card><CardTitle>Stage Funnel</CardTitle><FunnelChart stageCounts={stageCounts} stages={stages} /></Card>
         <Card>
           <CardTitle>Conversion Rates</CardTitle>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             {convs.map(({ label, from, to }) => {
               const p = from > 0 ? Math.round(to / from * 100) : 0
-              const c = p >= 60 ? '#d4af37' : p >= 40 ? '#b8952a' : '#7a6a30'
+              const c = p >= 60 ? '#d4af37' : p >= 40 ? '#b89228' : '#3a3020'
               return (
-                <div key={label} style={{ background: '#0a0a0a', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '22px', fontWeight: 800, color: c, fontFamily: 'var(--font-display)' }}>{p}%</div>
-                  <div style={{ fontSize: '9px', color: 'var(--text-3)', marginTop: '3px' }}>{label}</div>
+                <div key={label} style={{ background: '#060606', border: '1px solid rgba(212,175,55,0.07)', borderRadius: '6px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '22px', fontWeight: 300, color: c, letterSpacing: '-0.02em' }}>{p}%</div>
+                  <div style={{ fontSize: '9px', color: 'var(--text-3)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 }}>{label}</div>
                 </div>
               )
             })}
           </div>
         </Card>
       </div>
-      <Card><CardTitle>Full Breakdown Table</CardTitle><StageTable stageCounts={stageCounts} stages={stages} sources={d?.sources || []} /></Card>
+      <Card><CardTitle>Full Breakdown Table</CardTitle><StageTable stageCounts={stageCounts} stages={stages} sources={data?.sources || []} /></Card>
     </div>
   )
 }
@@ -139,46 +154,66 @@ function Pipeline({ data }) {
 export default function App() {
   const [activeTab, setActiveTab] = useState('overview')
   const [source, setSource] = useState('all')
-  const { data, loading, error, refetch, lastFetch } = useStats(source)
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const [range, setRange] = useState('daily')
+  const { data, loading, error, refetch, lastFetch } = useStats(source, range)
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', padding: '0 28px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '24px', height: '24px', background: '#d4af37', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Zap size={12} color="#080808" />
+    <div style={{ minHeight: '100vh', background: '#060606', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: '#080808', borderBottom: '1px solid rgba(212,175,55,0.1)', padding: '0 28px', height: '54px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ width: '28px', height: '28px', border: '1.5px solid #d4af37', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L11 3.5V8.5L6 11L1 8.5V3.5L6 1Z" stroke="#d4af37" strokeWidth="1" fill="none"/></svg>
           </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>GHL Pipeline</span>
-          <span style={{ fontSize: '9px', background: 'rgba(212,175,55,0.12)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.28)', padding: '2px 7px', borderRadius: '20px', fontWeight: 700 }}>● LIVE</span>
+          <div>
+            <div style={{ fontSize: '12px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e8dcc8', lineHeight: 1.2 }}>GHL Pipeline</div>
+            <div style={{ fontSize: '9px', color: 'var(--text-3)', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>Reporting Dashboard</div>
+          </div>
+          <div style={{ fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)', padding: '3px 9px', borderRadius: '3px', fontWeight: 500 }}>Live</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-3)' }}>{today}</span>
-          {lastFetch && <span style={{ fontSize: '11px', color: 'var(--text-3)' }}>Updated {lastFetch.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
-          <button onClick={refetch} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '7px', padding: '5px 12px', color: 'var(--text-3)', fontSize: '11px', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
-            <RefreshCw size={11} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-3)', letterSpacing: '0.03em', fontWeight: 300 }}>{today}</span>
+          {lastFetch && <span style={{ fontSize: '10px', color: '#3a3020', letterSpacing: '0.04em' }}>Updated {lastFetch.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+          <button onClick={refetch} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid rgba(212,175,55,0.15)', borderRadius: '4px', padding: '5px 12px', color: 'var(--text-3)', fontSize: '10px', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-body)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+            <RefreshCw size={10} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
             Refresh
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px', background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: '20px', padding: '3px 10px 3px 4px' }}>
-            <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#d4af37', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 800, color: '#080808' }}>A</div>
-            <span style={{ fontSize: '11px', color: 'var(--text-2)' }}>Admin</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1.5px solid rgba(212,175,55,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 600, color: '#d4af37', letterSpacing: '0.04em' }}>AO</div>
+            <span style={{ fontSize: '11px', color: 'var(--text-3)', letterSpacing: '0.04em', fontWeight: 300 }}>Admin</span>
           </div>
         </div>
       </div>
 
-      <div style={{ background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', padding: '0 28px', display: 'flex', gap: '2px', flexShrink: 0 }}>
+      <div style={{ background: '#060606', borderBottom: '1px solid rgba(212,175,55,0.08)', padding: '0 28px', display: 'flex', alignItems: 'center' }}>
         {NAV_TABS.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ fontSize: '12px', padding: '11px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 500, transition: 'all .15s', borderBottom: '2px solid', borderBottomColor: activeTab === tab.id ? '#d4af37' : 'transparent', color: activeTab === tab.id ? '#d4af37' : 'var(--text-3)' }}>
-            {tab.label}
-          </button>
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+            fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', padding: '14px 16px',
+            border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font-body)',
+            fontWeight: 500, transition: 'all .2s', borderBottom: '1.5px solid',
+            borderBottomColor: activeTab === tab.id ? '#d4af37' : 'transparent',
+            color: activeTab === tab.id ? '#d4af37' : 'var(--text-3)',
+          }}>{tab.label}</button>
         ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {DATE_RANGES.map(r => (
+            <button key={r.id} onClick={() => setRange(r.id)} style={{
+              fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 11px',
+              borderRadius: '3px', border: '1px solid', cursor: 'pointer', fontFamily: 'var(--font-body)',
+              fontWeight: 500, transition: 'all .15s',
+              borderColor: range === r.id ? '#d4af37' : 'rgba(212,175,55,0.1)',
+              background: range === r.id ? 'rgba(212,175,55,0.08)' : 'transparent',
+              color: range === r.id ? '#d4af37' : 'var(--text-3)',
+            }}>{r.label}</button>
+          ))}
+        </div>
       </div>
 
-      <div style={{ flex: 1, padding: '20px 28px', maxWidth: '1400px', width: '100%', margin: '0 auto' }}>
-        {activeTab === 'overview' && <Overview source={source} setSource={setSource} data={data} loading={loading} error={error} />}
-        {activeTab === 'pipeline' && <Pipeline data={data} />}
+      <div style={{ flex: 1, padding: '22px 28px', maxWidth: '1400px', width: '100%', margin: '0 auto' }}>
+        {activeTab === 'overview' && <Overview source={source} setSource={setSource} range={range} data={data} error={error} />}
+        {activeTab === 'pipeline' && <Pipeline range={range} />}
         {activeTab === 'adspend'  && <AdSpend data={data} />}
-        {activeTab === 'trends'   && <Trends />}
+        {activeTab === 'trends'   && <Trends range={range} />}
         {activeTab === 'dropoff'  && <Dropoff data={data} />}
         {activeTab === 'team'     && <Team />}
       </div>
