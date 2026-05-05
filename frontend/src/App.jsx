@@ -90,6 +90,7 @@ function Overview({ source, setSource, range, data, error }) {
     totals[0] > 0 ? `${Math.round(totals[5]/totals[0]*100)}% of total` : '—',
   ]
   const LABELS = ['Application Review','Ready for Group Interview','Group Interview Booked','Show – Group Interview','Academy Approved','Website Live']
+  const totalApplicants = data?.totalLeads || totals[0] || 0
 
   return (
     <div>
