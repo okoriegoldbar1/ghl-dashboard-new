@@ -74,6 +74,45 @@ function SourceFilter({ source, setSource }) {
   )
 }
 
+
+const SOURCE_COLORS = { 'Meta Ads': '#d4af37', 'Indeed': '#b89228', 'OnlineJobs.ph': '#856010' }
+const DEFAULT_SPEND = { 'Meta Ads': 150, 'Indeed': 80, 'OnlineJobs.ph': 40 }
+
+function CplRow({ sourceTotals }) {
+  const sources = ['Meta Ads', 'Indeed', 'OnlineJobs.ph']
+  const spend = DEFAULT_SPEND
+
+  // Try to load saved spend from localStorage
+  let savedSpend = spend
+  try {
+    const logs = JSON.parse(localStorage.getItem('adspend_logs') || '[]')
+    if (logs.length > 0) savedSpend = logs[0].spend
+  } catch {}
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '14px' }}>
+      {sources.map(src => {
+        const leads = sourceTotals?.[src] || 0
+        const s = savedSpend?.[src] || 0
+        const cpl = leads > 0 && s > 0 ? '$' + (s / leads).toFixed(2) : '—'
+        return (
+          <div key={src} style={{ background: '#141414', border: '1px solid rgba(212,175,55,0.08)', borderRadius: '8px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: SOURCE_COLORS[src], flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '9px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{src}</div>
+              <div style={{ fontSize: '10px', color: '#666', marginTop: '1px' }}>{leads} leads · ${s} spend</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '18px', fontWeight: 300, color: cpl === '—' ? '#444' : '#d4af37', letterSpacing: '-0.01em' }}>{cpl}</div>
+              <div style={{ fontSize: '9px', color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>per lead</div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function Overview({ source, setSource, range, data, error }) {
   const [drawerStage, setDrawerStage] = React.useState(null)
   const stages = data?.stages || []
@@ -109,6 +148,9 @@ function Overview({ source, setSource, range, data, error }) {
           onClose={() => setDrawerStage(null)}
         />
       )}
+
+      {/* CPL by source row */}
+      <CplRow sourceTotals={data?.sourceTotals} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '10px', marginBottom: '10px' }}>
         <Card><CardTitle>Pipeline Funnel</CardTitle><FunnelChart stageCounts={stageCounts} stages={stages} /></Card>
         <Card><CardTitle>Source Breakdown</CardTitle><SourceBreakdown sourceTotals={data?.sourceTotals} /></Card>
