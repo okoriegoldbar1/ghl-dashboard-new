@@ -135,8 +135,9 @@ function Overview({ source, setSource, range, data, error }) {
   const stages = data?.stages || []
   const stageCounts = data?.stageCounts || {}
   const totals = stages.map(s => stageCounts[s]?.total || 0)
+  const totalApplicants = data?.totalLeads || 0
+
   const overallConv = totalApplicants > 0 ? Math.round((totals[5] / totalApplicants) * 100) : 0
-  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010','#d4af37']
   const SUBS = [
     'total applicants',
     totalApplicants > 0 ? `${Math.round(totals[0]/totalApplicants*100)}% of total` : '—',
@@ -148,7 +149,6 @@ function Overview({ source, setSource, range, data, error }) {
     totalApplicants > 0 ? `${Math.round(totals[6]/totalApplicants*100)}% matched` : '—',
   ]
   const LABELS = ['App. Review','Group Interview Ready','Interview Booked','Show – Interview','Academy Approved','Website Live','Offer Accepted']
-  const totalApplicants = data?.totalLeads || 0
 
   return (
     <div>

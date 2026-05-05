@@ -137,6 +137,8 @@ export default function StageDrawer({ stage, leads, onClose, onLeadDeleted }) {
                       <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: SOURCE_COLORS[lead.source] || '#555' }} />
                       <span style={{ fontSize: '11px', color: '#666' }}>{lead.source || 'Unknown source'}</span>
                     </div>
+                    {lead.email && <div style={{ fontSize: '11px', color: '#555', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>✉ {lead.email}</div>}
+                    {lead.phone && <div style={{ fontSize: '11px', color: '#555', marginTop: '1px' }}>✆ {lead.phone}</div>}
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontSize: '11px', color: '#b0b0b0' }}>{formatDate(lead.createdAt)}</div>
