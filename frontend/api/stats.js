@@ -71,7 +71,7 @@ export default async function handler(req, res) {
       sourceTotals[src] = allInRange.filter(l => l.source === src).length;
     });
 
-    const recentLeads = filtered.slice(0, 20).map(l => ({
+    const recentLeads = filtered.map(l => ({
       contactId: l.contact_id, name: l.name, source: l.source,
       currentStage: l.current_stage, updatedAt: l.updated_at, createdAt: l.created_at,
     }));

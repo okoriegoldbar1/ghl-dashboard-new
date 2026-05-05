@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import StageDrawer from './components/StageDrawer'
 import { useStats } from './hooks/useStats'
 import MetricCard from './components/MetricCard'
 import FunnelChart from './components/FunnelChart'
@@ -74,6 +75,7 @@ function SourceFilter({ source, setSource }) {
 }
 
 function Overview({ source, setSource, range, data, error }) {
+  const [drawerStage, setDrawerStage] = React.useState(null)
   const stages = data?.stages || []
   const stageCounts = data?.stageCounts || {}
   const totals = stages.map(s => stageCounts[s]?.total || 0)
@@ -95,9 +97,16 @@ function Overview({ source, setSource, range, data, error }) {
       {error && <div style={{ background: 'rgba(214,48,49,0.08)', border: '1px solid rgba(214,48,49,0.2)', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', color: '#ff7675', fontSize: '11px' }}>Could not reach backend: {error}</div>}
       <RangeLabel range={range} />
       <SourceFilter source={source} setSource={setSource} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '8px', marginBottom: '14px' }}>
-        {LABELS.map((label, i) => <MetricCard key={label} label={label} value={totals[i]} sub={SUBS[i]} accent={ACCENT[i]} />)}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '8px', marginBottom: '14px' }}>
+        {LABELS.map((label, i) => <MetricCard key={label} label={label} value={totals[i]} sub={SUBS[i]} accent={ACCENT[i]} onClick={() => setDrawerStage(label)} />)}
       </div>
+      {drawerStage && (
+        <StageDrawer
+          stage={drawerStage}
+          leads={data?.recentLeads || []}
+          onClose={() => setDrawerStage(null)}
+        />
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '10px', marginBottom: '10px' }}>
         <Card><CardTitle>Pipeline Funnel</CardTitle><FunnelChart stageCounts={stageCounts} stages={stages} /></Card>
         <Card><CardTitle>Source Breakdown</CardTitle><SourceBreakdown sourceTotals={data?.sourceTotals} /></Card>
@@ -109,6 +118,7 @@ function Overview({ source, setSource, range, data, error }) {
 
 function Pipeline({ range }) {
   const [source, setSource] = useState('all')
+  const [pipeDrawer, setPipeDrawer] = React.useState(null)
   const { data } = useStats(source, range)
   const stages = data?.stages || []
   const stageCounts = data?.stageCounts || {}
@@ -126,9 +136,16 @@ function Pipeline({ range }) {
       <div style={{ fontSize: '11px', color: 'var(--text-3)', marginBottom: '16px', letterSpacing: '0.03em' }}>Only leads created in the selected period</div>
       <RangeLabel range={range} />
       <SourceFilter source={source} setSource={setSource} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '8px', marginBottom: '14px' }}>
-        {stages.map((s, i) => <MetricCard key={s} label={s} value={totals[i]} accent={ACCENT[i]} />)}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '8px', marginBottom: '14px' }}>
+        {stages.map((s, i) => <MetricCard key={s} label={s} value={totals[i]} accent={ACCENT[i]} onClick={() => setPipeDrawer(s)} />)}
       </div>
+      {pipeDrawer && (
+        <StageDrawer
+          stage={pipeDrawer}
+          leads={data?.recentLeads || []}
+          onClose={() => setPipeDrawer(null)}
+        />
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
         <Card><CardTitle>Stage Funnel</CardTitle><FunnelChart stageCounts={stageCounts} stages={stages} /></Card>
         <Card>
