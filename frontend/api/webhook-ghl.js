@@ -42,7 +42,7 @@ function extract(body) {
   const email = body.customData?.email || body.email || '';
   const phone = body.customData?.phone || body.phone || '';
 
-  return { contactId, contactName, stage, rawSource, pipelineName, email, phone, country };
+  return { contactId, contactName, stage, rawSource, pipelineName, email, phone };
 }
 
 export default async function handler(req, res) {
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body;
-    const { contactId, contactName, stage, rawSource, pipelineName, email, phone, country } = extract(body);
+    const { contactId, contactName, stage, rawSource, pipelineName, email, phone } = extract(body);
     const source = normalizeSource(rawSource);
     const timestamp = new Date().toISOString();
 
@@ -95,7 +95,6 @@ export default async function handler(req, res) {
           email,
           phone,
           source,
-          country,
           current_stage: stage,
           stage_history: [{ stage, timestamp }],
           created_at:    timestamp,
