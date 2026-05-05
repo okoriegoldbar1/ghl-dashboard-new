@@ -62,6 +62,7 @@ const TRACKED_STAGES = [
   "Show – Group Interview",
   "Academy Approved",
   "Website Live",
+  "Offer Accepted",
 ];
 
 const SOURCES = ["Meta Ads", "Indeed", "OnlineJobs.ph"];

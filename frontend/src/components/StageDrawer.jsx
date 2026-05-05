@@ -11,6 +11,7 @@ const LABEL_TO_STAGE = {
   'Show – Interview':     'Show – Group Interview',
   'Academy Approved':     'Academy Approved',
   'Website Live':         'Website Live',
+  'Offer Accepted':       'Offer Accepted',
   '__all__':              '__all__',
 }
 

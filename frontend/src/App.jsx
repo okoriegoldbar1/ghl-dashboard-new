@@ -78,37 +78,54 @@ function SourceFilter({ source, setSource }) {
 const SOURCE_COLORS = { 'Meta Ads': '#d4af37', 'Indeed': '#b89228', 'OnlineJobs.ph': '#856010' }
 const DEFAULT_SPEND = { 'Meta Ads': 150, 'Indeed': 80, 'OnlineJobs.ph': 40 }
 
-function CplRow({ sourceTotals }) {
+function CplRow({ sourceTotals, stageCounts }) {
   const sources = ['Meta Ads', 'Indeed', 'OnlineJobs.ph']
-  const spend = DEFAULT_SPEND
 
-  // Try to load saved spend from localStorage
-  let savedSpend = spend
+  let savedSpend = DEFAULT_SPEND
   try {
     const logs = JSON.parse(localStorage.getItem('adspend_logs') || '[]')
     if (logs.length > 0) savedSpend = logs[0].spend
   } catch {}
 
+  const totalSpend = sources.reduce((a, s) => a + (savedSpend?.[s] || 0), 0)
+  const matchedStage = stageCounts?.['Offer Accepted'] || {}
+  const totalMatched = matchedStage.total || 0
+  const costPerMatched = totalMatched > 0 && totalSpend > 0 ? '$' + (totalSpend / totalMatched).toFixed(2) : '—'
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '14px' }}>
-      {sources.map(src => {
-        const leads = sourceTotals?.[src] || 0
-        const s = savedSpend?.[src] || 0
-        const cpl = leads > 0 && s > 0 ? '$' + (s / leads).toFixed(2) : '—'
-        return (
-          <div key={src} style={{ background: '#141414', border: '1px solid rgba(212,175,55,0.08)', borderRadius: '8px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: SOURCE_COLORS[src], flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '9px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{src}</div>
-              <div style={{ fontSize: '10px', color: '#666', marginTop: '1px' }}>{leads} leads · ${s} spend</div>
+    <div style={{ marginBottom: '14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '8px' }}>
+        {sources.map(src => {
+          const leads = sourceTotals?.[src] || 0
+          const s = savedSpend?.[src] || 0
+          const cpl = leads > 0 && s > 0 ? '$' + (s / leads).toFixed(2) : '—'
+          return (
+            <div key={src} style={{ background: '#141414', border: '1px solid rgba(212,175,55,0.08)', borderRadius: '8px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: SOURCE_COLORS[src], flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '9px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{src}</div>
+                <div style={{ fontSize: '10px', color: '#666', marginTop: '1px' }}>{leads} leads · ${s} spend</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '18px', fontWeight: 300, color: cpl === '—' ? '#444' : '#d4af37', letterSpacing: '-0.01em' }}>{cpl}</div>
+                <div style={{ fontSize: '9px', color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>per lead</div>
+              </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '18px', fontWeight: 300, color: cpl === '—' ? '#444' : '#d4af37', letterSpacing: '-0.01em' }}>{cpl}</div>
-              <div style={{ fontSize: '9px', color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>per lead</div>
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
+      {/* Cost per matched candidate */}
+      <div style={{ background: '#141414', border: '1px solid rgba(212,175,55,0.15)', borderRadius: '8px', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#d4af37', flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '9px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Cost per Matched Candidate</div>
+          <div style={{ fontSize: '10px', color: '#555', marginTop: '1px' }}>Total ad spend ÷ Offer Accepted · {totalMatched} matched · ${totalSpend} total spend</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '22px', fontWeight: 300, color: costPerMatched === '—' ? '#444' : '#d4af37', letterSpacing: '-0.01em' }}>{costPerMatched}</div>
+          <div style={{ fontSize: '9px', color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>per match</div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -118,18 +135,20 @@ function Overview({ source, setSource, range, data, error }) {
   const stages = data?.stages || []
   const stageCounts = data?.stageCounts || {}
   const totals = stages.map(s => stageCounts[s]?.total || 0)
-  const overallConv = totals[0] > 0 ? Math.round((totals[5] / totals[0]) * 100) : 0
-  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010']
+  const overallConv = totalApplicants > 0 ? Math.round((totals[5] / totalApplicants) * 100) : 0
+  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010','#d4af37']
   const SUBS = [
     'total applicants',
-    totals[0] > 0 ? `${Math.round(totals[1]/totals[0]*100)}% of total` : '—',
-    totals[0] > 0 ? `${Math.round(totals[2]/totals[0]*100)}% of total` : '—',
-    totals[0] > 0 ? `${Math.round(totals[3]/totals[0]*100)}% of total` : '—',
-    totals[0] > 0 ? `${Math.round(totals[4]/totals[0]*100)}% of total` : '—',
-    totals[0] > 0 ? `${Math.round(totals[5]/totals[0]*100)}% of total` : '—',
+    totalApplicants > 0 ? `${Math.round(totals[0]/totalApplicants*100)}% of total` : '—',
+    totalApplicants > 0 ? `${Math.round(totals[1]/totalApplicants*100)}% of total` : '—',
+    totalApplicants > 0 ? `${Math.round(totals[2]/totalApplicants*100)}% of total` : '—',
+    totalApplicants > 0 ? `${Math.round(totals[3]/totalApplicants*100)}% of total` : '—',
+    totalApplicants > 0 ? `${Math.round(totals[4]/totalApplicants*100)}% of total` : '—',
+    totalApplicants > 0 ? `${Math.round(totals[5]/totalApplicants*100)}% of total` : '—',
+    totalApplicants > 0 ? `${Math.round(totals[6]/totalApplicants*100)}% matched` : '—',
   ]
-  const LABELS = ['App. Review','Group Interview Ready','Interview Booked','Show – Interview','Academy Approved','Website Live']
-  const totalApplicants = data?.totalLeads || totals[0] || 0
+  const LABELS = ['App. Review','Group Interview Ready','Interview Booked','Show – Interview','Academy Approved','Website Live','Offer Accepted']
+  const totalApplicants = data?.totalLeads || 0
 
   return (
     <div>
@@ -137,7 +156,7 @@ function Overview({ source, setSource, range, data, error }) {
       {error && <div style={{ background: 'rgba(214,48,49,0.08)', border: '1px solid rgba(214,48,49,0.2)', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', color: '#ff7675', fontSize: '11px' }}>Could not reach backend: {error}</div>}
       <RangeLabel range={range} />
       <SourceFilter source={source} setSource={setSource} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '8px', marginBottom: '14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', gap: '8px', marginBottom: '14px' }}>
         <MetricCard label="Total Applicants" value={totalApplicants} sub="all time in period" accent="#d4af37" onClick={() => setDrawerStage('__all__')} />
         {LABELS.map((label, i) => <MetricCard key={label} label={label} value={totals[i]} sub={SUBS[i]} accent={ACCENT[i]} onClick={() => setDrawerStage(label)} />)}
       </div>
@@ -150,7 +169,7 @@ function Overview({ source, setSource, range, data, error }) {
       )}
 
       {/* CPL by source row */}
-      <CplRow sourceTotals={data?.sourceTotals} />
+      <CplRow sourceTotals={data?.sourceTotals} stageCounts={data?.stageCounts} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '10px', marginBottom: '10px' }}>
         <Card><CardTitle>Pipeline Funnel</CardTitle><FunnelChart stageCounts={stageCounts} stages={stages} /></Card>
         <Card><CardTitle>Source Breakdown</CardTitle><SourceBreakdown sourceTotals={data?.sourceTotals} /></Card>
@@ -167,7 +186,7 @@ function Pipeline({ range }) {
   const stages = data?.stages || []
   const stageCounts = data?.stageCounts || {}
   const totals = stages.map(s => stageCounts[s]?.total || 0)
-  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010']
+  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010','#d4af37']
   const convs = [
     { label: 'Screening → Qualified', from: totals[0], to: totals[1] },
     { label: 'Qualified → Booked', from: totals[1], to: totals[2] },
@@ -277,7 +296,7 @@ export default function App() {
         {activeTab === 'overview' && <Overview source={source} setSource={setSource} range={range} data={data} error={error} />}
         {activeTab === 'pipeline' && <Pipeline range={range} />}
         {activeTab === 'adspend'  && <AdSpend data={data} isReadOnly={false} />}
-        {activeTab === 'trends'   && <Trends range={range} />}
+        {activeTab === 'trends'   && <Trends data={data} range={range} />}
         {activeTab === 'dropoff'  && <Dropoff data={data} />}
         {activeTab === 'team'     && <Team />}
       </div>
