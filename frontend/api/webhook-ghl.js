@@ -1,68 +1,48 @@
-// POST /api/webhook-ghl
-// Accepts GHL webhook in ANY format - very permissive field extraction
-const { supabase, normalizeSource, setCors, TRACKED_STAGES } = require("./_lib");
+const { supabase, normalizeSource, setCors } = require("./_lib");
 
 function extract(body) {
-  // GHL sends data in many different shapes depending on version + trigger type
-  // This tries every known field path
-
+  // Contact ID
   const contactId =
-    body.contact_id      ||
-    body.contactId       ||
-    body.id              ||
-    body.contact?.id     ||
-    body.payload?.contact_id ||
-    body.payload?.id     ||
+    body.customData?.contactId   ||
+    body.contact_id              ||
+    body.contactId               ||
+    body.id                      ||
     null;
 
+  // Name
   const contactName =
-    body.full_name              ||
-    body.name                   ||
-    body.contact_name           ||
-    body.contactName            ||
-    body.contact?.full_name     ||
-    body.contact?.name          ||
-    body.payload?.full_name     ||
-    body.payload?.name          ||
-    `${body.first_name || body.contact?.first_name || ''} ${body.last_name || body.contact?.last_name || ''}`.trim() ||
+    body.customData?.full_name   ||
+    body.full_name               ||
+    body.name                    ||
+    `${body.first_name || ''} ${body.last_name || ''}`.trim() ||
     'Unknown';
 
+  // Stage — GHL has a TYPO: "pipleline_stage" (missing the e)
   const stage =
-    body.pipeline_stage_name     ||
-    body.pipelineStageName       ||
-    body.stage_name              ||
-    body.stageName               ||
-    body.stage?.name             ||
-    body.opportunity?.pipeline_stage_name ||
-    body.opportunity?.stageName  ||
-    body.payload?.pipeline_stage_name ||
-    body.pipeline_stage          ||
+    body.customData?.pipeline_stage_name  ||
+    body.pipleline_stage                  ||  // GHL's typo
+    body.pipeline_stage_name              ||
+    body.pipeline_stage                   ||
+    body.stageName                        ||
+    body.stage?.name                      ||
     null;
 
+  // Source — prefer customData which you control
   const rawSource =
-    body.lead_source             ||
-    body.leadSource              ||
-    body.source                  ||
-    body.contact?.source         ||
-    body.contact?.lead_source    ||
-    body.payload?.lead_source    ||
-    body.customField?.lead_source ||
-    body.custom_fields?.lead_source ||
+    body.customData?.lead_source  ||
+    body.contact_source           ||
+    body.opportunity_source       ||
+    body.source                   ||
     null;
 
-  const email =
-    body.email           ||
-    body.contact?.email  ||
-    body.payload?.email  ||
-    '';
+  // Pipeline name (for reference)
+  const pipelineName =
+    body.pipeline_name || null;
 
-  const phone =
-    body.phone           ||
-    body.contact?.phone  ||
-    body.payload?.phone  ||
-    '';
+  const email = body.customData?.email || body.email || '';
+  const phone = body.customData?.phone || body.phone || '';
 
-  return { contactId, contactName, stage, rawSource, email, phone };
+  return { contactId, contactName, stage, rawSource, pipelineName, email, phone };
 }
 
 export default async function handler(req, res) {
@@ -72,49 +52,30 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body;
-
-    // Log raw payload to help debug (visible in Vercel function logs)
-    console.log("GHL WEBHOOK RECEIVED:", JSON.stringify(body, null, 2));
-
-    const { contactId, contactName, stage, rawSource, email, phone } = extract(body);
+    const { contactId, contactName, stage, rawSource, pipelineName, email, phone } = extract(body);
     const source = normalizeSource(rawSource);
     const timestamp = new Date().toISOString();
 
-    // If we still can't find contactId or stage, return 200 anyway
-    // (so GHL doesn't keep retrying) but log what we got
+    console.log(`Extracted → contactId: ${contactId}, stage: ${stage}, source: ${source}, pipeline: ${pipelineName}`);
+
     if (!contactId) {
-      console.warn("Could not extract contactId from payload:", JSON.stringify(body));
-      return res.status(200).json({ 
-        success: false, 
-        warning: "Could not extract contactId",
-        received: Object.keys(body),
-      });
+      console.warn("Missing contactId");
+      return res.status(200).json({ success: false, warning: "Missing contactId" });
     }
 
     if (!stage) {
-      console.warn("Could not extract stage from payload:", JSON.stringify(body));
-      return res.status(200).json({ 
-        success: false,
-        warning: "Could not extract stage",
-        contactId,
-        received_keys: Object.keys(body),
-      });
+      console.warn("Missing stage — keys received:", Object.keys(body));
+      return res.status(200).json({ success: false, warning: "Missing stage", keys: Object.keys(body) });
     }
 
-    // Check if lead already exists
-    let existing = null;
-    try {
-      const rows = await supabase(
-        `/leads?contact_id=eq.${encodeURIComponent(contactId)}&limit=1`,
-        { method: "GET", prefer: "" }
-      );
-      existing = rows && rows.length > 0 ? rows[0] : null;
-    } catch (e) {
-      console.error("Supabase lookup error:", e.message);
-    }
+    // Check if lead exists
+    const existing = await supabase(
+      `/leads?contact_id=eq.${encodeURIComponent(contactId)}&limit=1`,
+      { method: "GET", prefer: "" }
+    ).catch(() => null);
 
-    if (existing) {
-      const stageHistory = [...(existing.stage_history || []), { stage, timestamp }];
+    if (existing && existing.length > 0) {
+      const stageHistory = [...(existing[0].stage_history || []), { stage, timestamp }];
       await supabase(`/leads?contact_id=eq.${encodeURIComponent(contactId)}`, {
         method: "PATCH",
         body: JSON.stringify({
@@ -124,12 +85,13 @@ export default async function handler(req, res) {
           updated_at: timestamp,
         }),
       });
+      console.log(`✓ Updated: ${contactName} → ${stage}`);
     } else {
       await supabase("/leads", {
         method: "POST",
         body: JSON.stringify({
           contact_id:    contactId,
-          name:          contactName || 'Unknown',
+          name:          contactName,
           email,
           phone,
           source,
@@ -139,14 +101,13 @@ export default async function handler(req, res) {
           updated_at:    timestamp,
         }),
       });
+      console.log(`✓ Created: ${contactName} → ${stage}`);
     }
 
-    console.log(`✓ Saved: ${contactName} → ${stage} (${source})`);
     return res.status(200).json({ success: true, contactId, stage, source });
 
   } catch (err) {
-    console.error("Webhook error:", err);
-    // Return 200 so GHL doesn't keep retrying — log the real error
+    console.error("Webhook error:", err.message);
     return res.status(200).json({ success: false, error: err.message });
   }
 }
