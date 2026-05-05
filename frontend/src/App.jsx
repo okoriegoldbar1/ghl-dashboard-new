@@ -82,12 +82,12 @@ function Overview({ source, setSource, range, data, error }) {
   const overallConv = totals[0] > 0 ? Math.round((totals[5] / totals[0]) * 100) : 0
   const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010']
   const SUBS = [
-    'entry point',
-    totals[0] > 0 ? `${Math.round(totals[1]/totals[0]*100)}% of screening` : '—',
-    totals[1] > 0 ? `${Math.round(totals[2]/totals[1]*100)}% of qualified` : '—',
-    totals[2] > 0 ? `${Math.round(totals[3]/totals[2]*100)}% of booked` : '—',
-    totals[3] > 0 ? `${Math.round(totals[4]/totals[3]*100)}% showed` : '—',
-    `${overallConv}% overall conv.`,
+    'total applicants',
+    totals[0] > 0 ? `${Math.round(totals[1]/totals[0]*100)}% of total` : '—',
+    totals[0] > 0 ? `${Math.round(totals[2]/totals[0]*100)}% of total` : '—',
+    totals[0] > 0 ? `${Math.round(totals[3]/totals[0]*100)}% of total` : '—',
+    totals[0] > 0 ? `${Math.round(totals[4]/totals[0]*100)}% of total` : '—',
+    totals[0] > 0 ? `${Math.round(totals[5]/totals[0]*100)}% of total` : '—',
   ]
   const LABELS = ['Application Review','Ready for Group Interview','Group Interview Booked','Show – Group Interview','Academy Approved','Website Live']
 
@@ -97,7 +97,8 @@ function Overview({ source, setSource, range, data, error }) {
       {error && <div style={{ background: 'rgba(214,48,49,0.08)', border: '1px solid rgba(214,48,49,0.2)', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', color: '#ff7675', fontSize: '11px' }}>Could not reach backend: {error}</div>}
       <RangeLabel range={range} />
       <SourceFilter source={source} setSource={setSource} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '8px', marginBottom: '14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '8px', marginBottom: '14px' }}>
+        <MetricCard label="Total Applicants" value={totalApplicants} sub="all time in period" accent="#d4af37" onClick={() => setDrawerStage('__all__')} />
         {LABELS.map((label, i) => <MetricCard key={label} label={label} value={totals[i]} sub={SUBS[i]} accent={ACCENT[i]} onClick={() => setDrawerStage(label)} />)}
       </div>
       {drawerStage && (
