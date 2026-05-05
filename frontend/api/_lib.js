@@ -56,10 +56,11 @@ function setCors(res) {
 
 // ── Tracked stages & sources ──────────────────────────────────────────────────
 const TRACKED_STAGES = [
-  "Application Screening",
-  "Qualified for Group Interview",
+  "Application Review",
+  "Ready for Group Interview",
   "Group Interview Booked",
-  "Approved for Academy",
+  "Show – Group Interview",
+  "Academy Approved",
   "Website Live",
 ];
 

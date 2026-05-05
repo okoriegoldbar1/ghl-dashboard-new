@@ -2,17 +2,19 @@ import React from 'react'
 
 const SOURCE_COLORS = { 'Meta Ads': '#d4af37', 'Indeed': '#b89228', 'OnlineJobs.ph': '#856010' }
 const STAGE_COLORS = {
-  'Application Screening': '#856010',
-  'Qualified for Group Interview': '#a07818',
+  'Application Review': '#856010',
+  'Ready for Group Interview': '#a07818',
   'Group Interview Booked': '#b89228',
-  'Approved for Academy': '#c8a430',
+  'Show – Group Interview': '#a07818',
+  'Academy Approved': '#c8a430',
   'Website Live': '#d4af37',
 }
 const STAGE_BG = {
-  'Application Screening': 'rgba(133,96,16,0.15)',
-  'Qualified for Group Interview': 'rgba(160,120,24,0.15)',
+  'Application Review': 'rgba(133,96,16,0.15)',
+  'Ready for Group Interview': 'rgba(160,120,24,0.15)',
   'Group Interview Booked': 'rgba(184,146,40,0.15)',
-  'Approved for Academy': 'rgba(200,164,48,0.15)',
+  'Show – Group Interview': 'rgba(160,120,24,0.15)',
+  'Academy Approved': 'rgba(200,164,48,0.15)',
   'Website Live': 'rgba(212,175,55,0.15)',
 }
 

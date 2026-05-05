@@ -54,10 +54,14 @@ export default async function handler(req, res) {
 
     filtered.forEach(lead => {
       const stage = lead.current_stage;
-      if (stageCounts[stage]) {
-        stageCounts[stage].total++;
-        if (stageCounts[stage][lead.source] !== undefined) {
-          stageCounts[stage][lead.source]++;
+      // Try exact match first, then case-insensitive
+      const matchedStage = stageCounts[stage]
+        ? stage
+        : TRACKED_STAGES.find(s => s.toLowerCase() === (stage || '').toLowerCase());
+      if (matchedStage && stageCounts[matchedStage]) {
+        stageCounts[matchedStage].total++;
+        if (stageCounts[matchedStage][lead.source] !== undefined) {
+          stageCounts[matchedStage][lead.source]++;
         }
       }
     });

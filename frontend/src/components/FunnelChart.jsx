@@ -1,6 +1,6 @@
 import React from 'react'
 
-const GOLD = ['#d4af37','#c8a430','#b89228','#a07818','#856010']
+const GOLD = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010']
 
 export default function FunnelChart({ stageCounts, stages }) {
   if (!stageCounts || !stages) return null

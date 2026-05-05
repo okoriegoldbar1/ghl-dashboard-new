@@ -77,16 +77,17 @@ function Overview({ source, setSource, range, data, error }) {
   const stages = data?.stages || []
   const stageCounts = data?.stageCounts || {}
   const totals = stages.map(s => stageCounts[s]?.total || 0)
-  const overallConv = totals[0] > 0 ? Math.round((totals[4] / totals[0]) * 100) : 0
-  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#856010']
+  const overallConv = totals[0] > 0 ? Math.round((totals[5] / totals[0]) * 100) : 0
+  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010']
   const SUBS = [
     'entry point',
     totals[0] > 0 ? `${Math.round(totals[1]/totals[0]*100)}% of screening` : '—',
     totals[1] > 0 ? `${Math.round(totals[2]/totals[1]*100)}% of qualified` : '—',
     totals[2] > 0 ? `${Math.round(totals[3]/totals[2]*100)}% of booked` : '—',
+    totals[3] > 0 ? `${Math.round(totals[4]/totals[3]*100)}% showed` : '—',
     `${overallConv}% overall conv.`,
   ]
-  const LABELS = ['Application Screening','Qualified for Interview','Interview Booked','Approved for Academy','Website Live']
+  const LABELS = ['Application Review','Ready for Group Interview','Group Interview Booked','Show – Group Interview','Academy Approved','Website Live']
 
   return (
     <div>
@@ -112,7 +113,7 @@ function Pipeline({ range }) {
   const stages = data?.stages || []
   const stageCounts = data?.stageCounts || {}
   const totals = stages.map(s => stageCounts[s]?.total || 0)
-  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#856010']
+  const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010']
   const convs = [
     { label: 'Screening → Qualified', from: totals[0], to: totals[1] },
     { label: 'Qualified → Booked', from: totals[1], to: totals[2] },
