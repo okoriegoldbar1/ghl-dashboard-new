@@ -5,7 +5,8 @@ const SOURCE_COLORS = { 'Meta Ads': '#d4af37', 'Indeed': '#b89228', 'OnlineJobs.
 const ACCENT = ['#d4af37','#c8a430','#b89228','#a07818']
 
 function today() {
-  return new Date().toISOString().split('T')[0]
+  // Use EST date
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
 }
 
 function formatDate(d) {

@@ -97,10 +97,20 @@ function SourceFilter({ source, setSource }) {
 }
 
 function CplRow({ sourceTotals, stageCounts }) {
-  let savedSpend = DEFAULT_SPEND
+  // Always use TODAY's logged spend — fall back to most recent entry if no entry for today
+  let savedSpend = { 'Meta Ads': 0, 'Indeed': 0, 'OnlineJobs.ph': 0 }
+  let spendDate = null
+  let isToday = false
   try {
     const logs = JSON.parse(localStorage.getItem('adspend_logs') || '[]')
-    if (logs.length > 0) savedSpend = logs[0].spend
+    const todayKey = new Date().toISOString().split('T')[0]
+    const todayEntry = logs.find(l => l.date === todayKey)
+    const useEntry = todayEntry || logs[0]
+    if (useEntry) {
+      savedSpend = useEntry.spend
+      spendDate = useEntry.date
+      isToday = useEntry.date === todayKey
+    }
   } catch {}
 
   const totalSpend = Object.values(savedSpend || {}).reduce((a, b) => a + (parseFloat(b) || 0), 0)
@@ -119,7 +129,9 @@ function CplRow({ sourceTotals, stageCounts }) {
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: SOURCE_COLORS[src], flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '9px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{src}</div>
-                <div style={{ fontSize: '10px', color: '#444', marginTop: '1px' }}>{leads} leads · ${s} spend</div>
+                <div style={{ fontSize: '10px', color: '#444', marginTop: '1px' }}>
+                  {leads} leads · ${s} spend{spendDate ? ` (${isToday ? 'today' : spendDate})` : ' (no spend logged)'}
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '18px', fontWeight: 300, color: cpl === '—' ? '#333' : '#d4af37' }}>{cpl}</div>
@@ -133,7 +145,7 @@ function CplRow({ sourceTotals, stageCounts }) {
         <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#d4af37', flexShrink: 0 }} />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '9px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Cost per Matched Candidate</div>
-          <div style={{ fontSize: '10px', color: '#555', marginTop: '1px' }}>Total spend ÷ Offer Accepted · {totalMatched} matched · ${totalSpend.toFixed(0)} spend</div>
+          <div style={{ fontSize: '10px', color: '#555', marginTop: '1px' }}>Total spend ÷ Offer Accepted · {totalMatched} matched · ${totalSpend.toFixed(0)} spend{spendDate ? ` · based on ${isToday ? "today's" : spendDate} spend` : ''}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '22px', fontWeight: 300, color: costPerMatched === '—' ? '#333' : '#d4af37' }}>{costPerMatched}</div>
@@ -267,9 +279,9 @@ function Pipeline({ range }) {
 export default function App() {
   const [activeTab, setActiveTab] = useState('overview')
   const [source, setSource] = useState('all')
-  const [range, setRange] = useState('daily')
+  const [range, setRange] = useState('weekly')
   const { data, loading, error, refetch, lastFetch } = useStats(source, range)
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' })
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', fontFamily: "'Inter',system-ui,sans-serif" }}>

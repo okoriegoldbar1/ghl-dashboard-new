@@ -22,7 +22,7 @@ export default function DailySummary({ data, range = 'daily' }) {
     if (drop > biggestDrop.pct) biggestDrop = { label: t.label, pct: drop }
   })
   const periodLabel = RANGE_LABELS[range] || 'Selected Period'
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })
 
   return (
     <div style={{ border: '1px solid rgba(212,175,55,0.2)', borderRadius: '8px', padding: '20px 24px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr auto', gap: '20px', alignItems: 'center', background: '#0f0f0f' }}>

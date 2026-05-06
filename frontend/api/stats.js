@@ -2,30 +2,62 @@
 // ONLY returns leads whose created_at falls within the selected date range
 const { supabase, setCors, TRACKED_STAGES, SOURCES } = require("./_lib");
 
+const TZ = "America/New_York"; // EST/EDT
+
+function getNowEST() {
+  // Get current date/time components in EST
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false,
+  });
+  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map(p => [p.type, p.value]));
+  return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`);
+}
+
+function getStartOfDayEST(date) {
+  // Get midnight EST as a UTC ISO string
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    year: "numeric", month: "2-digit", day: "2-digit",
+  });
+  const parts = Object.fromEntries(formatter.formatToParts(date).map(p => [p.type, p.value]));
+  // midnight EST = 5am UTC (or 4am during DST)
+  const midnightEST = new Date(`${parts.year}-${parts.month}-${parts.day}T00:00:00`);
+  // Convert to UTC by finding the offset
+  const offset = date.getTime() - getNowEST().getTime();
+  return new Date(midnightEST.getTime() - offset);
+}
+
 function getDateRange(range) {
   const now = new Date();
-  const start = new Date();
+  const nowEST = getNowEST();
+
   switch (range) {
-    case "daily":
-      start.setHours(0, 0, 0, 0);
-      break;
-    case "weekly":
-      const diff = now.getDay() === 0 ? 6 : now.getDay() - 1;
-      start.setDate(now.getDate() - diff);
-      start.setHours(0, 0, 0, 0);
-      break;
-    case "biweekly":
-      start.setDate(now.getDate() - 13);
-      start.setHours(0, 0, 0, 0);
-      break;
-    case "monthly":
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      break;
+    case "daily": {
+      return getStartOfDayEST(now).toISOString();
+    }
+    case "weekly": {
+      const day = nowEST.getDay(); // 0=Sun
+      const diff = day === 0 ? 6 : day - 1; // Monday start
+      const monday = new Date(now);
+      monday.setDate(monday.getDate() - diff);
+      return getStartOfDayEST(monday).toISOString();
+    }
+    case "biweekly": {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 13);
+      return getStartOfDayEST(d).toISOString();
+    }
+    case "monthly": {
+      const d = new Date(now);
+      d.setDate(1);
+      return getStartOfDayEST(d).toISOString();
+    }
     default:
       return null;
   }
-  return start.toISOString();
 }
 
 export default async function handler(req, res) {
