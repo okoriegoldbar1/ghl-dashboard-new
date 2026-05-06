@@ -1,62 +1,45 @@
 // GET /api/stats?source=all&range=daily|weekly|biweekly|monthly
-// ONLY returns leads whose created_at falls within the selected date range
 const { supabase, setCors, TRACKED_STAGES, SOURCES } = require("./_lib");
 
-const TZ = "America/New_York"; // EST/EDT
+const TZ = "America/New_York";
 
-function getNowEST() {
-  // Get current date/time components in EST
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hour12: false,
-  });
-  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map(p => [p.type, p.value]));
-  return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`);
+// Get today's date string in EST e.g. "2026-05-06"
+function getTodayEST() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: TZ });
 }
 
-function getStartOfDayEST(date) {
-  // Get midnight EST as a UTC ISO string
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
-    year: "numeric", month: "2-digit", day: "2-digit",
-  });
-  const parts = Object.fromEntries(formatter.formatToParts(date).map(p => [p.type, p.value]));
-  // midnight EST = 5am UTC (or 4am during DST)
-  const midnightEST = new Date(`${parts.year}-${parts.month}-${parts.day}T00:00:00`);
-  // Convert to UTC by finding the offset
-  const offset = date.getTime() - getNowEST().getTime();
-  return new Date(midnightEST.getTime() - offset);
+// Get a date N days ago as EST date string
+function daysAgoEST(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toLocaleDateString("en-CA", { timeZone: TZ });
 }
 
-function getDateRange(range) {
+// Get first day of current month in EST
+function firstOfMonthEST() {
   const now = new Date();
-  const nowEST = getNowEST();
+  const estStr = now.toLocaleDateString("en-CA", { timeZone: TZ }); // "2026-05-06"
+  return estStr.slice(0, 7) + "-01"; // "2026-05-01"
+}
 
+// Get Monday of current week in EST
+function mondayOfWeekEST() {
+  const now = new Date();
+  const estStr = now.toLocaleDateString("en-CA", { timeZone: TZ });
+  const estDate = new Date(estStr + "T00:00:00");
+  const day = estDate.getDay(); // 0=Sun
+  const diff = day === 0 ? 6 : day - 1;
+  estDate.setDate(estDate.getDate() - diff);
+  return estDate.toLocaleDateString("en-CA");
+}
+
+function getFromDate(range) {
   switch (range) {
-    case "daily": {
-      return getStartOfDayEST(now).toISOString();
-    }
-    case "weekly": {
-      const day = nowEST.getDay(); // 0=Sun
-      const diff = day === 0 ? 6 : day - 1; // Monday start
-      const monday = new Date(now);
-      monday.setDate(monday.getDate() - diff);
-      return getStartOfDayEST(monday).toISOString();
-    }
-    case "biweekly": {
-      const d = new Date(now);
-      d.setDate(d.getDate() - 13);
-      return getStartOfDayEST(d).toISOString();
-    }
-    case "monthly": {
-      const d = new Date(now);
-      d.setDate(1);
-      return getStartOfDayEST(d).toISOString();
-    }
-    default:
-      return null;
+    case "daily":    return getTodayEST();
+    case "weekly":   return mondayOfWeekEST();
+    case "biweekly": return daysAgoEST(13);
+    case "monthly":  return firstOfMonthEST();
+    default:         return null; // all time
   }
 }
 
@@ -68,16 +51,27 @@ export default async function handler(req, res) {
   try {
     const source = req.query.source || "all";
     const range  = req.query.range  || "all";
-    const fromDate = getDateRange(range);
+    const fromDate = getFromDate(range); // EST date string like "2026-05-01"
 
-    let path = "/leads?order=created_at.desc&limit=1000";
+    // Build query - filter by created_at date string prefix
+    let path = "/leads?order=created_at.desc&limit=2000";
     if (fromDate) {
-      path += `&created_at=gte.${encodeURIComponent(fromDate)}`;
+      // Use gte on the ISO timestamp - leads created from start of fromDate EST
+      // We convert EST midnight to UTC by using the date string directly
+      // Supabase stores UTC so we need midnight EST in UTC
+      // EST is UTC-5 (or UTC-4 DST) - use a safe offset of UTC-5
+      const fromUTC = new Date(fromDate + "T05:00:00.000Z"); // midnight EST = 5am UTC
+      path += `&created_at=gte.${fromUTC.toISOString()}`;
     }
 
     const allInRange = await supabase(path, { method: "GET", prefer: "" }) || [];
-    const filtered = source !== "all" ? allInRange.filter(l => l.source === source) : allInRange;
 
+    // Filter by source
+    const filtered = source !== "all"
+      ? allInRange.filter(l => l.source === source)
+      : allInRange;
+
+    // Stage counts
     const stageCounts = {};
     TRACKED_STAGES.forEach(s => {
       stageCounts[s] = { total: 0 };
@@ -86,10 +80,9 @@ export default async function handler(req, res) {
 
     filtered.forEach(lead => {
       const stage = lead.current_stage;
-      // Try exact match first, then case-insensitive
       const matchedStage = stageCounts[stage]
         ? stage
-        : TRACKED_STAGES.find(s => s.toLowerCase() === (stage || '').toLowerCase());
+        : TRACKED_STAGES.find(s => s.toLowerCase() === (stage || "").toLowerCase());
       if (matchedStage && stageCounts[matchedStage]) {
         stageCounts[matchedStage].total++;
         if (stageCounts[matchedStage][lead.source] !== undefined) {
@@ -98,21 +91,36 @@ export default async function handler(req, res) {
       }
     });
 
+    // Source totals scoped to date range
     const sourceTotals = {};
     SOURCES.forEach(src => {
       sourceTotals[src] = allInRange.filter(l => l.source === src).length;
     });
 
     const recentLeads = filtered.map(l => ({
-      contactId: l.contact_id, name: l.name, source: l.source,
-      currentStage: l.current_stage, updatedAt: l.updated_at, createdAt: l.created_at,
+      contactId:    l.contact_id,
+      name:         l.name,
+      email:        l.email || "",
+      phone:        l.phone || "",
+      source:       l.source,
+      currentStage: l.current_stage,
+      updatedAt:    l.updated_at,
+      createdAt:    l.created_at,
     }));
 
     return res.json({
-      totalLeads: filtered.length, stageCounts, sourceTotals,
-      recentLeads, lastUpdated: filtered[0]?.updated_at || null,
-      stages: TRACKED_STAGES, sources: SOURCES, range, fromDate,
+      totalLeads:   filtered.length,
+      stageCounts,
+      sourceTotals,
+      recentLeads,
+      lastUpdated:  filtered[0]?.updated_at || null,
+      stages:       TRACKED_STAGES,
+      sources:      SOURCES,
+      range,
+      fromDate,
+      debug: { todayEST: getTodayEST(), fromDate, totalRows: allInRange.length }
     });
+
   } catch (err) {
     console.error("Stats error:", err);
     return res.status(500).json({ error: err.message });

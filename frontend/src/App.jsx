@@ -51,7 +51,7 @@ const STAGE_LABELS = [
 const ACCENT_COLORS = ['#d4af37','#c8a430','#b89228','#a07818','#6a4c0a','#856010','#d4af37']
 
 const SOURCE_COLORS = { 'Meta Ads': '#d4af37', 'Indeed': '#b89228', 'OnlineJobs.ph': '#856010' }
-const DEFAULT_SPEND = { 'Meta Ads': 150, 'Indeed': 80, 'OnlineJobs.ph': 40 }
+const DEFAULT_SPEND = { 'Meta Ads': 0, 'Indeed': 0, 'OnlineJobs.ph': 0 }
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 function Card({ children, style = {} }) {
@@ -96,20 +96,53 @@ function SourceFilter({ source, setSource }) {
   )
 }
 
-function CplRow({ sourceTotals, stageCounts }) {
-  // Always use TODAY's logged spend — fall back to most recent entry if no entry for today
+function getTodayEST() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+}
+
+function CplRow({ sourceTotals, stageCounts, range }) {
   let savedSpend = { 'Meta Ads': 0, 'Indeed': 0, 'OnlineJobs.ph': 0 }
-  let spendDate = null
+  let spendLabel = 'no spend logged'
   let isToday = false
+
   try {
     const logs = JSON.parse(localStorage.getItem('adspend_logs') || '[]')
-    const todayKey = new Date().toISOString().split('T')[0]
-    const todayEntry = logs.find(l => l.date === todayKey)
-    const useEntry = todayEntry || logs[0]
-    if (useEntry) {
-      savedSpend = useEntry.spend
-      spendDate = useEntry.date
-      isToday = useEntry.date === todayKey
+    const todayKey = getTodayEST()
+
+    if (range === 'daily') {
+      // Use today's entry only
+      const entry = logs.find(l => l.date === todayKey)
+      if (entry) {
+        savedSpend = entry.spend
+        spendLabel = "today's spend"
+        isToday = true
+      } else {
+        spendLabel = 'no spend logged today'
+      }
+    } else {
+      // Sum all entries in the period
+      const now = new Date()
+      let cutoff = new Date()
+      if (range === 'weekly') { const d = now.getDay(); cutoff.setDate(now.getDate() - (d === 0 ? 6 : d - 1)); }
+      else if (range === 'biweekly') { cutoff.setDate(now.getDate() - 13); }
+      else if (range === 'monthly') { cutoff.setDate(1); }
+      else { cutoff = new Date('2000-01-01'); }
+
+      const cutoffStr = cutoff.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
+      const periodLogs = logs.filter(l => l.date >= cutoffStr)
+
+      if (periodLogs.length > 0) {
+        const summed = { 'Meta Ads': 0, 'Indeed': 0, 'OnlineJobs.ph': 0 }
+        periodLogs.forEach(entry => {
+          Object.keys(summed).forEach(src => {
+            summed[src] += parseFloat(entry.spend?.[src] || 0)
+          })
+        })
+        savedSpend = summed
+        spendLabel = `${periodLogs.length} day${periodLogs.length > 1 ? 's' : ''} of spend`
+      } else {
+        spendLabel = 'no spend logged for period'
+      }
     }
   } catch {}
 
@@ -130,7 +163,7 @@ function CplRow({ sourceTotals, stageCounts }) {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '9px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{src}</div>
                 <div style={{ fontSize: '10px', color: '#444', marginTop: '1px' }}>
-                  {leads} leads · ${s} spend{spendDate ? ` (${isToday ? 'today' : spendDate})` : ' (no spend logged)'}
+                  {leads} leads · ${s.toFixed(0)} spend · {spendLabel}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -145,7 +178,7 @@ function CplRow({ sourceTotals, stageCounts }) {
         <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#d4af37', flexShrink: 0 }} />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '9px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Cost per Matched Candidate</div>
-          <div style={{ fontSize: '10px', color: '#555', marginTop: '1px' }}>Total spend ÷ Offer Accepted · {totalMatched} matched · ${totalSpend.toFixed(0)} spend{spendDate ? ` · based on ${isToday ? "today's" : spendDate} spend` : ''}</div>
+          <div style={{ fontSize: '10px', color: '#555', marginTop: '1px' }}>Total spend ÷ Offer Accepted · {totalMatched} matched · ${totalSpend.toFixed(0)} spend · {spendLabel}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '22px', fontWeight: 300, color: costPerMatched === '—' ? '#333' : '#d4af37' }}>{costPerMatched}</div>
@@ -200,7 +233,7 @@ function Overview({ source, setSource, range, data, error }) {
         <StageDrawer stage={drawerStage} leads={data?.recentLeads || []} onClose={() => setDrawerStage(null)} />
       )}
 
-      <CplRow sourceTotals={data?.sourceTotals} stageCounts={stageCounts} />
+      <CplRow sourceTotals={data?.sourceTotals} stageCounts={stageCounts} range={range} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '10px', marginBottom: '10px' }}>
         <Card><CardTitle>Pipeline Funnel</CardTitle><FunnelChart stageCounts={stageCounts} stages={stages} /></Card>
